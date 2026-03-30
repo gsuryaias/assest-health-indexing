@@ -86,7 +86,14 @@ def build_risk_reason(t):
         else:
             reasons.append(alert.get("msg", f"{param} = {val}"))
 
-    # 3. If no alerts but still not Excellent, note the contributing factors
+    # 3. Remaining insulation life (furan / DP)
+    dp = t.get("dp_estimated")
+    rul = t.get("remaining_life_pct")
+    ins_cond = t.get("insulation_condition")
+    if dp is not None and rul is not None and ins_cond not in (None, "Excellent", "Good"):
+        reasons.append(f"Insulation DP ≈ {int(dp)} ({ins_cond} — {rul:.0f}% remaining life, Chendong/CIGRE WG A2.18)")
+
+    # 4. If no alerts but still not Excellent, note the contributing factors
     if not reasons:
         chi = t.get("chi")
         risk = t.get("risk_level", "")

@@ -63,16 +63,16 @@ def duval_triangle_1(ch4, c2h4, c2h2):
     pct_c2h4 = c2h4 / total * 100
     pct_c2h2 = c2h2 / total * 100
 
-    # Zone boundaries (IEC 60599:2022 Annex A)
+    # Zone boundaries (IEC 60599:2022 Annex A, Figure A.1)
+    # DT zone spans 4% < C2H2 ≤ 29% with C2H4 > 50% (full range, not just 4-13%)
     if pct_c2h2 > 29:
-        return "D2"      # High-energy discharge
-    elif pct_c2h2 > 13:
-        return "D1"      # Low-energy discharge
+        return "D2"      # High-energy discharge (pure arcing)
     elif pct_c2h2 > 4:
+        # DT and D1 share the 4–29% C2H2 band; split by C2H4 boundary at 50%
         if pct_c2h4 > 50:
-            return "DT"  # Discharge + thermal
+            return "DT"  # Discharge + thermal (mixed)
         else:
-            return "D1"
+            return "D1"  # Low-energy discharge
     else:
         # Low acetylene region — thermal faults or PD
         if pct_ch4 > 98:
@@ -183,22 +183,21 @@ def _rogers_code(ratio, thresholds):
 
 _ROGERS_FAULT_TABLE = {
     # (CH4/H2_code, C2H2/C2H4_code, C2H4/C2H6_code): fault_type
+    # Reference: IEEE C57.104-2019, Table 4; Rogers (1978)
     (0, 0, 0): "Normal",
     (1, 0, 0): "PD",
     (1, 1, 0): "D1",       # Low-energy discharge
     (0, 1, 0): "D1",
     (0, 2, 0): "D1",
     (0, 0, 1): "T1",       # Thermal < 300°C
+    (1, 0, 1): "T1",
+    (2, 0, 0): "T1",
     (2, 0, 1): "T2",       # Thermal 300-700°C
-    (2, 0, 2): "T3",       # Thermal > 700°C
+    (0, 0, 2): "T3",       # Thermal > 700°C
     (1, 0, 2): "T3",
-    (0, 0, 2): "T3",
+    (2, 0, 2): "T3",
     (0, 2, 1): "D2",       # High-energy discharge
     (0, 2, 2): "D2",
-    (1, 0, 1): "T1",
-    (1, 0, 2): "T3",
-    (2, 0, 0): "T1",
-    (2, 0, 2): "T3",
 }
 
 

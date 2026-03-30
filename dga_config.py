@@ -196,6 +196,44 @@ CONDITION_CONFIDENCE_THRESHOLD = 0.6
 RATE_PENALTY_FACTOR = 0.05  # DGAF reduction per gas exceeding rate threshold
 
 # =============================================================================
+# Furan / Degree of Polymerization — Remaining Insulation Life (RUL)
+# Reference: Chendong (1996) "Estimating the Age of Power Transformers by
+#            Furan Concentration in Oil" — the standard 2-FAL/DP equation
+# Reference: CIGRE WG A2.18 (2017) — end-of-life and condition criteria for DP
+# Reference: IEC 60450:2004 — measurement of mean viscometric DP of cellulose
+# Reference: IEEE C57.91-2011 §8.2 — furan analysis for aging assessment
+#
+# The Chendong equation correlates 2-FAL furan concentration in transformer
+# oil to the Degree of Polymerization (DP) of the solid cellulose insulation.
+# DP is the direct physical measure of cellulose chain integrity. Mechanical
+# strength falls critically below DP 200, which is the accepted end-of-life.
+#
+#   Equation: log10(2FAL_ppb) = CHENDONG_A - CHENDONG_B × DP
+#   Inverted: DP = (CHENDONG_A - log10(2FAL_ppb)) / CHENDONG_B
+#
+#   Remaining life % = (DP_current - DP_EOL) / (DP_new - DP_EOL) × 100
+# =============================================================================
+# Original Chendong equation uses 2-FAL in μg/g (ppm):  log10([μg/g]) = 1.51 - 0.0035×DP
+# Our data column FURAN_2FAL is in ppb (μg/kg ≈ μg/L for transformer oil).
+# Unit conversion: log10(ppb) = log10(μg/g) + log10(1000) = log10(μg/g) + 3
+# → Adjusted A for ppb input: A = 1.51 + 3 = 4.51
+FURAN_CHENDONG_A = 4.51    # Chendong A adjusted for ppb input (original 1.51 is for μg/g)
+FURAN_CHENDONG_B = 0.0035  # Chendong constant B (unchanged)
+
+FURAN_DP_NEW = 1000   # DP of new Kraft paper (typical range 1000–1100)
+FURAN_DP_EOL = 200    # End-of-life threshold: DP ≤ 200 (CIGRE WG A2.18)
+
+# DP condition thresholds → insulation condition label (CIGRE WG A2.18 Table 1)
+# Key: minimum DP for that label (DP below threshold → next worse label)
+FURAN_DP_THRESHOLDS = {
+    "Excellent": 800,   # DP ≥ 800: new-like insulation, no concern
+    "Good":      600,   # DP 600–800: moderate aging, normal monitoring
+    "Fair":      400,   # DP 400–600: significant aging, increase test frequency
+    "Poor":      300,   # DP 300–400: advanced aging, plan refurbishment
+    # DP < 300: Critical — near end-of-life, urgent action required
+}
+
+# =============================================================================
 # Model Training Parameters
 # =============================================================================
 RANDOM_STATE = 42

@@ -36,6 +36,8 @@ from dga_config import (
     DGA_GASES, IEEE_THRESHOLDS, IEEE_RATE_THRESHOLDS,
     DGAF_WEIGHTS, CHI_WEIGHTS, OIL_QUALITY_THRESHOLDS, RISK_LEVELS,
     FAULT_SEVERITY_CAP, CONDITION_CONFIDENCE_THRESHOLD, RATE_PENALTY_FACTOR,
+    FURAN_CHENDONG_A, FURAN_CHENDONG_B, FURAN_DP_NEW, FURAN_DP_EOL,
+    FURAN_DP_THRESHOLDS,
 )
 
 # Risk level ordering (lower = more severe)
@@ -380,5 +382,106 @@ def compute_composite_health_index(df, labels_df=None):
     if has_labels:
         n_overridden = result["condition_override"].sum()
         print(f"\n  Condition Group overrides: {n_overridden:,} samples")
+
+    return result
+
+
+def compute_furan_rul(df):
+    """
+    Estimate remaining insulation life (RUL) from furan (2-FAL) oil analysis.
+
+    Uses the Chendong equation — the industry standard for 2-FAL/DP correlation,
+    validated over 30+ years and referenced by IEEE C57.91-2011 §8.2 and CIGRE.
+
+    Reference: Chendong (1996) "Estimating the Age of Power Transformers by
+               Furan Concentration in Oil" — IEEE/CIGRE most widely used equation
+    Reference: CIGRE WG A2.18 (2017) — end-of-life criteria: DP ≤ 200
+    Reference: IEC 60450:2004 — DP measurement methodology
+    Reference: IEEE C57.91-2011 §8.2 — furan analysis for thermal aging
+
+    Equation:
+        log10(2FAL_ppb) = 1.51 - 0.0035 × DP        (Chendong 1996)
+        DP = (1.51 - log10(2FAL_ppb)) / 0.0035       (inverted)
+        remaining_life_% = (DP_current - DP_EOL) / (DP_new - DP_EOL) × 100
+
+    DP condition thresholds (CIGRE WG A2.18, Table 1):
+        ≥ 800: Excellent — new-like insulation, no concern
+        600–800: Good — moderate aging, normal monitoring
+        400–600: Fair — significant aging, increase test frequency
+        300–400: Poor — advanced aging, plan refurbishment
+        < 300: Critical — near end-of-life, urgent action
+
+    Args:
+        df: DataFrame with 'FURAN_2FAL' column (ppb). Rows where FURAN_2FAL
+            is missing, zero, or negative will produce NaN outputs.
+
+    Returns:
+        DataFrame indexed same as df, with columns:
+            dp_estimated: Estimated DP from Chendong equation (NaN if no 2-FAL)
+            remaining_life_pct: Remaining insulation life (0–100%), clamped
+            insulation_life_used_pct: Life consumed = 100 - remaining_life_pct
+            insulation_condition: Condition label (Excellent/Good/Fair/Poor/Critical)
+    """
+    FURAN_COL = "FURAN_2FAL"
+    result = pd.DataFrame(index=df.index)
+
+    if FURAN_COL not in df.columns:
+        print(f"  compute_furan_rul: '{FURAN_COL}' column not found — skipping")
+        result["dp_estimated"] = np.nan
+        result["remaining_life_pct"] = np.nan
+        result["insulation_life_used_pct"] = np.nan
+        result["insulation_condition"] = np.nan
+        return result
+
+    two_fal = pd.to_numeric(df[FURAN_COL], errors="coerce")
+    valid = two_fal > 0  # log10 requires strictly positive
+
+    # Chendong equation: DP = (A - log10(2FAL)) / B
+    dp = np.where(
+        valid,
+        (FURAN_CHENDONG_A - np.log10(two_fal.where(valid, 1.0))) / FURAN_CHENDONG_B,
+        np.nan,
+    )
+    result["dp_estimated"] = np.round(dp, 0)
+
+    # Remaining life %: clamp to [0, 100]
+    rul_raw = (dp - FURAN_DP_EOL) / (FURAN_DP_NEW - FURAN_DP_EOL) * 100
+    result["remaining_life_pct"] = np.clip(np.where(valid, rul_raw, np.nan), 0.0, 100.0).round(1)
+    result["insulation_life_used_pct"] = (100.0 - result["remaining_life_pct"]).round(1)
+
+    # Insulation condition label (CIGRE WG A2.18)
+    def _dp_condition(dp_val):
+        if pd.isna(dp_val):
+            return np.nan
+        if dp_val >= FURAN_DP_THRESHOLDS["Excellent"]:
+            return "Excellent"
+        elif dp_val >= FURAN_DP_THRESHOLDS["Good"]:
+            return "Good"
+        elif dp_val >= FURAN_DP_THRESHOLDS["Fair"]:
+            return "Fair"
+        elif dp_val >= FURAN_DP_THRESHOLDS["Poor"]:
+            return "Poor"
+        else:
+            return "Critical"
+
+    result["insulation_condition"] = pd.array(
+        [_dp_condition(v) for v in result["dp_estimated"]], dtype=object
+    )
+
+    # Summary
+    n_valid = int(valid.sum())
+    print(f"\n--- Furan RUL (Chendong equation) ---")
+    print(f"  Transformers with 2-FAL data: {n_valid:,} / {len(df):,} samples")
+    if n_valid > 0:
+        dp_series = result["dp_estimated"].dropna()
+        rul_series = result["remaining_life_pct"].dropna()
+        print(f"  DP range: {dp_series.min():.0f} – {dp_series.max():.0f}")
+        print(f"  Mean DP: {dp_series.mean():.0f}  |  Median: {dp_series.median():.0f}")
+        print(f"  Mean remaining life: {rul_series.mean():.1f}%")
+        cond_dist = result["insulation_condition"].value_counts()
+        for label in ["Excellent", "Good", "Fair", "Poor", "Critical"]:
+            n = cond_dist.get(label, 0)
+            if n > 0:
+                print(f"  {label:10s}: {n:4d} samples")
 
     return result

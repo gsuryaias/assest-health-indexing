@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info, FileText, Shield, Activity } from 'lucide-react';
 import { useDashboard } from '../context/DashboardContext';
 import GasTrendChart from '../components/charts/GasTrendChart';
+import DuvalTriangleChart from '../components/charts/DuvalTriangleChart';
 import RiskBadge from '../components/shared/RiskBadge';
 import FaultBadge from '../components/shared/FaultBadge';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -146,6 +147,104 @@ function DiagnosisMethods({ methods }) {
   );
 }
 
+const INSULATION_COLORS = {
+  Excellent: { bar: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  Good:      { bar: 'bg-green-500',   text: 'text-green-700',   bg: 'bg-green-50',   border: 'border-green-200' },
+  Fair:      { bar: 'bg-amber-500',   text: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  Poor:      { bar: 'bg-orange-500',  text: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
+  Critical:  { bar: 'bg-red-500',     text: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200' },
+};
+
+function InsulationLifePanel({ transformer }) {
+  const { dp_estimated, remaining_life_pct, insulation_condition } = transformer || {};
+  const hasFuran = dp_estimated != null && remaining_life_pct != null;
+  const colors = INSULATION_COLORS[insulation_condition] || INSULATION_COLORS.Good;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+      <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <Activity className="w-3.5 h-3.5" />
+        Remaining Insulation Life (Furan / DP Analysis)
+      </h3>
+      {!hasFuran ? (
+        <div className="flex items-start gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
+          <Info className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
+          <div>
+            <p className="font-medium text-gray-600">Furan test (2-FAL) required</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              No 2-FAL furan data available for this transformer. Furan analysis measures cellulose
+              insulation degradation and is the most accurate method for estimating remaining
+              insulation life. IEEE C57.91-2011 §8.2 recommends furan testing for ageing assessment.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* DP + condition badge */}
+          <div className={`rounded-lg p-3 ${colors.bg} border ${colors.border}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-xs text-gray-500">Estimated Degree of Polymerization (DP)</p>
+                <p className={`text-3xl font-bold mt-0.5 ${colors.text}`}>
+                  {Math.round(dp_estimated)}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
+                  {insulation_condition}
+                </span>
+                <p className="text-[10px] text-gray-400 mt-1">Insulation condition</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-500">
+              Chendong (1996) equation: DP = (1.51 − log₁₀(2-FAL ppb)) / 0.0035 &middot; CIGRE WG A2.18
+            </p>
+          </div>
+
+          {/* Remaining life progress bar */}
+          <div>
+            <div className="flex justify-between items-baseline mb-1.5">
+              <span className="text-xs font-medium text-gray-700">Remaining insulation life</span>
+              <span className={`text-xl font-bold ${colors.text}`}>
+                {remaining_life_pct?.toFixed(1)}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-3">
+              <div
+                className={`${colors.bar} h-3 rounded-full transition-all`}
+                style={{ width: `${Math.max(0, Math.min(100, remaining_life_pct))}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+              <span>End-of-life (DP = 200)</span>
+              <span>New paper (DP = 1000)</span>
+            </div>
+          </div>
+
+          {/* Thresholds reference */}
+          <div className="grid grid-cols-5 gap-1 text-center text-[9px]">
+            {[
+              { label: 'Critical', range: 'DP < 300', cls: 'bg-red-100 text-red-700' },
+              { label: 'Poor',     range: '300–400',  cls: 'bg-orange-100 text-orange-700' },
+              { label: 'Fair',     range: '400–600',  cls: 'bg-amber-100 text-amber-700' },
+              { label: 'Good',     range: '600–800',  cls: 'bg-green-100 text-green-700' },
+              { label: 'Excellent',range: 'DP ≥ 800', cls: 'bg-emerald-100 text-emerald-700' },
+            ].map(({ label, range, cls }) => (
+              <div key={label} className={`rounded p-1 ${cls} ${insulation_condition === label ? 'ring-1 ring-current' : ''}`}>
+                <p className="font-semibold">{label}</p>
+                <p className="opacity-75">{range}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-gray-400">
+            Reference: CIGRE WG A2.18 (2017) Table 1 &middot; IEEE C57.91-2011 §8.2 &middot; IEC 60450:2004
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TransformerDetail() {
   const { id } = useParams();
   const { state, loadHistory } = useDashboard();
@@ -283,6 +382,9 @@ export default function TransformerDetail() {
       {/* Diagnosis Methods — with proper explanations */}
       <DiagnosisMethods methods={transformer.methods} />
 
+      {/* Duval Triangle 1 — IEC 60599:2022 Annex A */}
+      <DuvalTriangleChart gases={transformer.gases} />
+
       {/* Gas Trend Chart */}
       {history ? (
         <GasTrendChart history={history} />
@@ -347,6 +449,9 @@ export default function TransformerDetail() {
           })}
         </div>
       </div>
+
+      {/* Remaining Insulation Life — Furan / DP */}
+      <InsulationLifePanel transformer={transformer} />
 
       {/* Sample History Table (accordion) */}
       {history && (

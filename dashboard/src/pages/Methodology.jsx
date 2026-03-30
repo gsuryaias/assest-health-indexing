@@ -125,6 +125,20 @@ const STANDARDS = [
     url: "https://www.e-cigre.org/publications/detail/761-condition-assessment-of-power-transformers.html",
     usage: "Two-component health assessment model: aggregate health index + condition group (worst-case override). Used for fault-severity ceiling on risk level classification to prevent severe faults from being masked by aggregate scoring.",
   },
+  {
+    id: "S5",
+    title: "IEEE C57.91-2011",
+    fullTitle: "Guide for Loading Mineral-Oil-Immersed Transformers and Step-Voltage Regulators",
+    url: "https://standards.ieee.org/standard/C57_91-2011.html",
+    usage: "§8.2 recommends furan analysis (2-FAL) for thermal aging and remaining insulation life estimation. References the Chendong equation for DP estimation from 2-FAL concentration.",
+  },
+  {
+    id: "S6",
+    title: "IEC 60450:2004",
+    fullTitle: "Measurement of the Mean Viscometric Degree of Polymerization of New and Aged Cellulosic Electrically Insulating Materials",
+    url: "https://webstore.iec.ch/en/publication/2145",
+    usage: "Standard method for measuring Degree of Polymerization (DP) of transformer insulation paper. Defines DP ≤ 200 as the physical end-of-life threshold for cellulose insulation.",
+  },
 ];
 
 function Section({ icon: Icon, title, children }) {
@@ -425,8 +439,61 @@ export default function Methodology() {
         </div>
       </Section>
 
+      {/* Furan / Remaining Insulation Life */}
+      <Section icon={FlaskConical} title="8. Remaining Insulation Life — Furan / DP Analysis">
+        <div className="space-y-3 text-sm text-gray-600">
+          <p>
+            The Degree of Polymerization (DP) of the cellulose insulation paper is the most direct physical
+            measure of insulation integrity. As cellulose chains degrade through thermal and electrical aging,
+            DP decreases from ~1000 (new paper) to ~200 (end-of-life). Below DP 200, the paper loses
+            mechanical strength and can no longer withstand normal electrical and mechanical stresses
+            (CIGRE WG A2.18, 2017).
+          </p>
+
+          <div className="bg-blue-50 rounded-lg p-3 font-mono text-xs text-blue-900 space-y-1">
+            <p className="font-semibold text-blue-800 font-sans text-xs mb-1">Chendong (1996) Equation — <em>standard industry formula</em></p>
+            <p>log<sub>10</sub>(2-FAL<sub>ppb</sub>) = 1.51 − 0.0035 × DP</p>
+            <p className="text-blue-700">↓ Inverted to solve for DP:</p>
+            <p>DP = (1.51 − log<sub>10</sub>(2-FAL<sub>ppb</sub>)) / 0.0035</p>
+            <p className="mt-2 text-blue-700">Remaining life % = (DP<sub>current</sub> − 200) / (1000 − 200) × 100</p>
+          </div>
+
+          <p>
+            2-FAL (2-Furfuraldehyde) is a furan derivative released into transformer oil as cellulose degrades.
+            The Chendong equation has been validated over 30+ years and is referenced by
+            {' '}<a href="https://standards.ieee.org/standard/C57_91-2011.html" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">IEEE C57.91-2011 §8.2</a>{' '}
+            and CIGRE WG A2.18 for remaining-life estimation. Typical error &lt; 8% across multiple transformer designs.
+          </p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">DP Range</th>
+                  <th className="px-3 py-2 text-left font-medium">Insulation Condition</th>
+                  <th className="px-3 py-2 text-left font-medium">Recommended Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <tr><td className="px-3 py-1.5">≥ 800</td><td className="px-3 py-1.5 text-emerald-700 font-medium">Excellent</td><td className="px-3 py-1.5">Normal operation, standard testing interval</td></tr>
+                <tr><td className="px-3 py-1.5">600 – 800</td><td className="px-3 py-1.5 text-green-700 font-medium">Good</td><td className="px-3 py-1.5">Continue monitoring, annual furan testing</td></tr>
+                <tr><td className="px-3 py-1.5">400 – 600</td><td className="px-3 py-1.5 text-amber-700 font-medium">Fair</td><td className="px-3 py-1.5">Increase furan testing to 6-monthly, plan oil treatment</td></tr>
+                <tr><td className="px-3 py-1.5">300 – 400</td><td className="px-3 py-1.5 text-orange-700 font-medium">Poor</td><td className="px-3 py-1.5">Semi-annual furan + other ageing markers, plan refurbishment</td></tr>
+                <tr><td className="px-3 py-1.5">&lt; 300</td><td className="px-3 py-1.5 text-red-700 font-medium">Critical</td><td className="px-3 py-1.5">Near end-of-life — schedule replacement, reduce loading</td></tr>
+                <tr><td className="px-3 py-1.5">≤ 200</td><td className="px-3 py-1.5 text-red-900 font-bold">End-of-life</td><td className="px-3 py-1.5">Physical end-of-life: mechanical failure risk under fault current</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Sources: Chendong (1996), CIGRE WG A2.18 (2017) Table 1, IEEE C57.91-2011 §8.2,
+            IEC 60450:2004 (DP measurement). 206 samples across 121 transformers have 2-FAL data in this fleet.
+          </p>
+        </div>
+      </Section>
+
       {/* Data Integrity */}
-      <Section icon={Shield} title="8. Data Integrity Notes">
+      <Section icon={Shield} title="9. Data Integrity Notes">
         <div className="space-y-2 text-sm text-gray-600">
           <ul className="list-disc list-inside space-y-1">
             <li>All gas values shown are from the <strong>actual last sample date</strong>, not aggregated across dates</li>
@@ -440,7 +507,7 @@ export default function Methodology() {
       </Section>
 
       {/* Research Papers */}
-      <Section icon={BookOpen} title="9. Research Papers">
+      <Section icon={BookOpen} title="10. Research Papers">
         <div className="space-y-3">
           {PAPERS.map(p => (
             <div key={p.id} className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors">
@@ -463,7 +530,7 @@ export default function Methodology() {
       </Section>
 
       {/* Standards */}
-      <Section icon={Shield} title="10. IEEE/IEC Standards">
+      <Section icon={Shield} title="11. IEEE/IEC Standards">
         <div className="space-y-3">
           {STANDARDS.map(s => (
             <div key={s.id} className="border border-gray-100 rounded-lg p-3">

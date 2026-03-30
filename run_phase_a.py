@@ -80,16 +80,23 @@ def main():
     print("\n" + "=" * 70)
     print("  STEP 5: Health Index Computation")
     print("=" * 70)
-    from dga_pipeline.health_index_calculator import compute_composite_health_index
+    from dga_pipeline.health_index_calculator import (
+        compute_composite_health_index, compute_furan_rul,
+    )
     health_df = compute_composite_health_index(wide_df, labels_df=labels_df)
 
     # Attach to wide_df
     for col in health_df.columns:
         wide_df[col] = health_df[col].values
 
-    # Re-save labeled data with health index columns
+    # Furan / DP-based Remaining Insulation Life
+    furan_df = compute_furan_rul(wide_df)
+    for col in furan_df.columns:
+        wide_df[col] = furan_df[col].values
+
+    # Re-save labeled data with health index + RUL columns
     wide_df.to_csv(labeled_path, index=False)
-    print(f"Re-saved with health index: {labeled_path}")
+    print(f"Re-saved with health index + furan RUL: {labeled_path}")
 
     # =========================================================================
     # Step 6: Time-Series Features

@@ -18,7 +18,7 @@ sys.path.insert(0, PROJECT_ROOT)
 from dga_config import (
     PROCESSED_DIR, MODELS_DIR, DGA_GASES, IEEE_THRESHOLDS, FAULT_TYPES,
 )
-from dga_pipeline.health_index_calculator import compute_composite_health_index
+from dga_pipeline.health_index_calculator import compute_composite_health_index, compute_furan_rul
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "data")
 
@@ -74,6 +74,13 @@ def load_and_prepare():
     # Convert Categorical to plain strings to avoid 0-count category issues
     risk_series = health_df["risk_level"]
     df["risk_level"] = risk_series.astype(str).where(risk_series.notna(), other=None)
+
+    # Furan / DP-based Remaining Insulation Life
+    furan_df = compute_furan_rul(df)
+    df["dp_estimated"] = furan_df["dp_estimated"].values
+    df["remaining_life_pct"] = furan_df["remaining_life_pct"].values
+    df["insulation_life_used_pct"] = furan_df["insulation_life_used_pct"].values
+    df["insulation_condition"] = furan_df["insulation_condition"].values
 
     # Map fault codes to names
     df["fault_name"] = df["fault_code"].map(FAULT_TYPES)
@@ -304,6 +311,9 @@ def build_transformers(df):
             "tdcg": _round(row.get("TDCG")),
             "condition_override": bool(row.get("condition_override", False)),
             "dgaf_rate_penalty": _round(row.get("dgaf_rate_penalty", 1.0)),
+            "dp_estimated": _round(row.get("dp_estimated")) if pd.notna(row.get("dp_estimated", np.nan)) else None,
+            "remaining_life_pct": _round(row.get("remaining_life_pct")) if pd.notna(row.get("remaining_life_pct", np.nan)) else None,
+            "insulation_condition": str(row.get("insulation_condition")) if pd.notna(row.get("insulation_condition", np.nan)) else None,
             "sample_count": int(df[df["Equipment No"] == row["Equipment No"]].shape[0]),
             "methods": _build_method_detail(row),
             "risk_explanation": _build_risk_explanation(row),

@@ -40,6 +40,18 @@ export default function Sidebar() {
       <div className="p-4 border-t border-slate-700">
         <p className="text-[10px] text-slate-500">Phase A &middot; Local Analysis</p>
         <p className="text-[10px] text-slate-500">IEEE C57.104-2019 &middot; IEC 60599</p>
+        <p className="text-[9px] text-slate-600 mt-2">
+          Proof of concept by{' '}
+          <a
+            href="https://www.linkedin.com/in/praveenchandgss"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-400 hover:text-blue-400 hover:underline"
+          >
+            Surya Praveenchand, IAS
+          </a>
+          <br />JMD AP Transco
+        </p>
       </div>
     </aside>
   );

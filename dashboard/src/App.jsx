@@ -30,6 +30,17 @@ export default function App() {
               <Route path="/fleet-report" element={<FleetReport />} />
             </Routes>
           </main>
+          <footer className="text-center py-3 text-[10px] text-gray-400">
+            Proof of concept by{' '}
+            <a
+              href="https://www.linkedin.com/in/praveenchandgss"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-blue-500 hover:underline"
+            >
+              Surya Praveenchand, IAS - JMD AP Transco
+            </a>
+          </footer>
         </div>
       </div>
     </DashboardProvider>

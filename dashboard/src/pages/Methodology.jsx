@@ -480,21 +480,6 @@ export default function Methodology() {
           ))}
         </div>
       </Section>
-
-      {/* Acknowledgement */}
-      <div className="text-center py-4 text-[11px] text-gray-400">
-        <p>
-          Proof of concept created by{' '}
-          <a
-            href="https://www.linkedin.com/in/suryapraveenchand"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 hover:text-blue-500 hover:underline"
-          >
-            Surya Praveenchand, IAS - JMD AP Transco
-          </a>
-        </p>
-      </div>
     </div>
   );
 }

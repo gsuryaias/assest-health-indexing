@@ -1,0 +1,140 @@
+{
+  "accuracy": 0.9965606190885641,
+  "weighted_f1": 0.9965185822107575,
+  "macro_f1": 0.9806185429755132,
+  "per_class": {
+    "Normal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 578.0
+    },
+    "PD": {
+      "precision": 0.9736842105263158,
+      "recall": 1.0,
+      "f1-score": 0.9866666666666667,
+      "support": 37.0
+    },
+    "D1": {
+      "precision": 0.9863013698630136,
+      "recall": 0.9863013698630136,
+      "f1-score": 0.9863013698630136,
+      "support": 73.0
+    },
+    "D2": {
+      "precision": 0.987012987012987,
+      "recall": 0.987012987012987,
+      "f1-score": 0.987012987012987,
+      "support": 77.0
+    },
+    "T1": {
+      "precision": 0.996078431372549,
+      "recall": 0.996078431372549,
+      "f1-score": 0.996078431372549,
+      "support": 255.0
+    },
+    "T2": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1-score": 0.8888888888888888,
+      "support": 5.0
+    },
+    "T3": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 115.0
+    },
+    "DT": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 23.0
+    }
+  },
+  "top_features": [
+    [
+      "ieee_status_CO",
+      "0.48062786"
+    ],
+    [
+      "pct_C2H2",
+      "0.06046489"
+    ],
+    [
+      "pct_H2",
+      "0.053190622"
+    ],
+    [
+      "duval_pct_C2H2",
+      "0.046013016"
+    ],
+    [
+      "n_methods_agreeing",
+      "0.0350943"
+    ],
+    [
+      "feat_method_duval_triangle",
+      "0.029697504"
+    ],
+    [
+      "agreement_ratio",
+      "0.0289269"
+    ],
+    [
+      "ratio_C2H2_C2H4",
+      "0.027539333"
+    ],
+    [
+      "pct_C2H4",
+      "0.026964216"
+    ],
+    [
+      "ratio_C2H2_TDCG",
+      "0.026757149"
+    ],
+    [
+      "log_C2H4",
+      "0.026652886"
+    ],
+    [
+      "feat_method_key_gas",
+      "0.022697717"
+    ],
+    [
+      "pct_CO",
+      "0.018123427"
+    ],
+    [
+      "TDCG",
+      "0.014943048"
+    ],
+    [
+      "feat_method_rogers",
+      "0.011122057"
+    ],
+    [
+      "C2H2",
+      "0.008664187"
+    ],
+    [
+      "consensus_confidence",
+      "0.007421593"
+    ],
+    [
+      "log_CO2",
+      "0.006559639"
+    ],
+    [
+      "pct_C2H6",
+      "0.0062080855"
+    ],
+    [
+      "n_methods_applied",
+      "0.005158351"
+    ]
+  ],
+  "n_train": 18488,
+  "n_test": 1163,
+  "n_features": 58
+}

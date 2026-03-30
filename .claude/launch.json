@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "/Users/praveenchand/Documents/Python experiments/PTR-DGA/dashboard"],
+      "port": 5174
+    }
+  ]
+}

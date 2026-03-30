@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* ===== Print Styles ===== */
+@media print {
+  /* Hide navigation and UI chrome */
+  aside, header, nav, .no-print {
+    display: none !important;
+  }
+
+  /* Remove sidebar margin and padding from main content */
+  .ml-56 {
+    margin-left: 0 !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0.5cm !important;
+  }
+
+  /* Clean print background */
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove shadows and rounded corners for cleaner print */
+  .shadow-sm, .shadow, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  /* Page break utilities for report sections */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+
+  /* Report-specific table styling for print */
+  .report-page table {
+    font-size: 10px;
+  }
+
+  .report-page {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Ensure colored badges print with backgrounds */
+  span[class*="bg-emerald"],
+  span[class*="bg-blue"],
+  span[class*="bg-amber"],
+  span[class*="bg-orange"],
+  span[class*="bg-red"],
+  span[class*="bg-gray"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Recharts renders as SVG which prints fine,
+     but make sure the container does not get clipped */
+  .recharts-responsive-container {
+    page-break-inside: avoid;
+  }
+}
